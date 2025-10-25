@@ -136,13 +136,20 @@
                     const content = document.getElementById('content');
                     content.innerHTML = `
                         <ul class="book-list">
-                            ${books.map(book => `
-                                <li>
-                                    <a href="/view/${encodeURIComponent(book)}?user_id=${userId}" class="book-item">
-                                        📄 ${book}
-                                    </a>
-                                </li>
-                            `).join('')}
+                            ${books.map(book => {
+                                const fileName = book.name || book;
+                                const fileId = book.file_id;
+                                const viewUrl = fileId 
+                                    ? `/view/${encodeURIComponent(fileName)}?user_id=${userId}&file_id=${fileId}`
+                                    : `/view/${encodeURIComponent(fileName)}?user_id=${userId}`;
+                                return `
+                                    <li>
+                                        <a href="${viewUrl}" class="book-item">
+                                            📄 ${fileName}
+                                        </a>
+                                    </li>
+                                `;
+                            }).join('')}
                         </ul>
                         <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px;">
                             Ваш ID: ${userId}
