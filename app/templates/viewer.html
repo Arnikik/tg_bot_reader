@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Чтение: {{ filename }}</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+      html, body { height: 100%; }
+      .viewer-iframe { width: 100%; height: calc(100vh - 96px); border: none; background: #f9fafb; }
+      .toolbar { position: sticky; top: 0; display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #fff; border-bottom: 1px solid #e5e7eb; z-index: 10; }
+      .toolbar .title { margin: 0; font-size: 16px; }
+      .toolbar .back { color: #2563eb; text-decoration: none; }
+      .fallback { display: flex; justify-content: center; padding: 10px 12px; background: #fff; border-top: 1px solid #e5e7eb; }
+      .fallback a { display: inline-block; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 10px; text-decoration: none; color: #111; background: #fff; }
+    </style>
+  </head>
+  <body>
+    <header class="toolbar">
+      <a class="back" href="/">← Назад</a>
+      <h1 class="title">{{ filename }}</h1>
+    </header>
+
+    <iframe class="viewer-iframe" src="{{ file_url }}"></iframe>
+    <div class="fallback">
+      <a href="{{ file_url }}" target="_blank" rel="noreferrer noopener">Открыть файл (если не видно в окне)</a>
+    </div>
+
+    <script>
+      if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.expand();
+        Telegram.WebApp.ready();
+      }
+    </script>
+  </body>
+</html> 

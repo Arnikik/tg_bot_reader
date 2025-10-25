@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Книгридер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f9fafb;
+            color: #111;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .book-list {
+            list-style: none;
+            padding: 0;
+        }
+        .book-item {
+            display: block;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f3f4f6;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #111;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        .book-item:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+        .no-books {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px 20px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Книгридер</h1>
+            <p>Ваши PDF книги</p>
+        </div>
+        
+        <div id="content">
+            <div class="loading">Загрузка...</div>
+        </div>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            Telegram.WebApp.expand();
+            Telegram.WebApp.ready();
+        }
+
+        // Получение user_id из URL параметров или Telegram WebApp
+        function getUserId() {
+            // Пытаемся получить user_id из URL параметров
+            const urlParams = new URLSearchParams(window.location.search);
+            const userIdFromUrl = urlParams.get('user_id');
+            if (userIdFromUrl) {
+                return parseInt(userIdFromUrl);
+            }
+            
+            // Пытаемся получить user_id из Telegram WebApp
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe) {
+                const initData = window.Telegram.WebApp.initDataUnsafe;
+                if (initData && initData.user && initData.user.id) {
+                    return initData.user.id;
+                }
+            }
+            
+            return null;
+        }
+
+        // Загрузка списка книг
+        async function loadBooks() {
+            try {
+                const userId = getUserId();
+                let books = [];
+                
+                if (userId) {
+                    // Пытаемся загрузить книги пользователя через API
+                    try {
+                        const response = await fetch(`/api/books?user_id=${userId}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            books = data.books || [];
+                        }
+                    } catch (apiError) {
+                        console.log('API недоступен, используем статический список');
+                    }
+                }
+                
+                // Если API не работает или нет user_id, показываем сообщение
+                if (books.length === 0) {
+                    const content = document.getElementById('content');
+                    if (userId) {
+                        content.innerHTML = `
+                            <div class="no-books">
+                                <h3>📖 У вас пока нет книг</h3>
+                                <p>Используйте кнопку "📤 Загрузить книгу" в боте для добавления PDF файлов.</p>
+                                <p><small>Ваш ID: ${userId}</small></p>
+                            </div>
+                        `;
+                    } else {
+                        content.innerHTML = `
+                            <div class="no-books">
+                                <h3>🔐 Требуется авторизация</h3>
+                                <p>Откройте это приложение через Telegram бота для доступа к вашим книгам.</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    const content = document.getElementById('content');
+                    content.innerHTML = `
+                        <ul class="book-list">
+                            ${books.map(book => `
+                                <li>
+                                    <a href="/view/${encodeURIComponent(book)}?user_id=${userId}" class="book-item">
+                                        📄 ${book}
+                                    </a>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div style="text-align: center; margin-top: 20px; color: #6b7280; font-size: 12px;">
+                            Ваш ID: ${userId}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки книг:', error);
+                document.getElementById('content').innerHTML = `
+                    <div class="no-books">
+                        <h3>❌ Ошибка загрузки</h3>
+                        <p>Не удалось загрузить список книг. Попробуйте позже.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Запуск при загрузке страницы
+        loadBooks();
+    </script>
+</body>
+</html>
