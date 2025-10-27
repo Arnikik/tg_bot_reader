@@ -72,7 +72,7 @@ async def on_start(message: types.Message) -> None:
             [
                 KeyboardButton(
                     text="🌐 Открыть ридер",
-                    web_app=WebAppInfo(url=f"{WEBAPP_URL}?user_id={message.from_user.id}"),
+                    web_app=WebAppInfo(url=f"{WEBAPP_URL}/simple?user_id={message.from_user.id}"),
                 )
             ]
         ],
@@ -91,7 +91,27 @@ async def on_start(message: types.Message) -> None:
 @dp.message(F.text == "📚 Мои книги")
 async def show_user_books(message: types.Message) -> None:
     user_id = message.from_user.id
+    
+    # Получаем книги из локального хранилища
     pdf_files = list_user_pdf_files(user_id)
+    
+    # Пытаемся получить книги из веб-приложения
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{WEBAPP_URL.rstrip('/')}/api/books",
+                params={"user_id": user_id},
+                timeout=5.0
+            )
+            if response.status_code == 200:
+                data = response.json()
+                web_books = data.get("books", [])
+                if web_books:
+                    # Добавляем книги из веб-приложения к локальным
+                    web_filenames = [book["name"] for book in web_books]
+                    pdf_files.extend([f for f in web_filenames if f not in pdf_files])
+    except Exception as e:
+        print(f"Ошибка получения книг из веб-приложения: {e}")
     
     if not pdf_files:
         await message.answer("У вас пока нет загруженных книг.\n\nИспользуйте кнопку '📤 Загрузить книгу' для добавления PDF файлов.")

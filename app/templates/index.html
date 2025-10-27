@@ -4,8 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Ридер • Список книг (PDF)</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
   </head>
   <body>
     <header class="header">
@@ -28,12 +29,5 @@
         {% endif %}
       </section>
     </main>
-
-    <script>
-      if (window.Telegram && window.Telegram.WebApp) {
-        Telegram.WebApp.expand();
-        Telegram.WebApp.ready();
-      }
-    </script>
   </body>
-</html> 
+</html>
